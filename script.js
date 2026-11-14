@@ -12,12 +12,13 @@ import {
 
 // ১. আপনার Firebase কনফিগারেশন
 const firebaseConfig = {
-  apiKey: "AIzaSyBeg5w5sTX-GiZmrwwzM4tKE6_4Ukk03SY",
-  authDomain: "trusted-shop-397b2.firebaseapp.com",
-  projectId: "trusted-shop-397b2",
-  storageBucket: "trusted-shop-397b2.firebasestorage.app",
-  messagingSenderId: "165165457662",
-  appId: "1:165165457662:web:d55460e2198c14c228c5af",
+  apiKey: "AIzaSyCLC2oIVL7Qpb7nX4q-ArIFvl0bxMyIcQE",
+  authDomain: "project-0f23df70-16c7-4f9b-937.firebaseapp.com",
+  projectId: "project-0f23df70-16c7-4f9b-937",
+  storageBucket: "project-0f23df70-16c7-4f9b-937.firebasestorage.app",
+  messagingSenderId: "299185225123",
+  appId: "1:299185225123:web:5342d37caad6c8e24f2e16",
+  measurementId: "G-TQP02LFH2B"
 };
 
 const app = initializeApp(firebaseConfig);
