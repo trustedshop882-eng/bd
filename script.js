@@ -58,15 +58,35 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function applySettings() {
-  if (document.getElementById("headerStoreName"))
-    document.getElementById("headerStoreName").innerText = storeSettings.name;
-  if (document.getElementById("footerStoreName"))
-    document.getElementById("footerStoreName").innerText = storeSettings.name;
-  if (document.getElementById("topPhoneDisplay"))
-    document.getElementById("topPhoneDisplay").innerText =
-      "+" + storeSettings.phone;
-  const bannerImg = document.getElementById("heroBannerImg");
-  if (bannerImg && storeSettings.banner) bannerImg.src = storeSettings.banner;
+  ["headerStoreName", "brandLogo"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = storeSettings.name;
+  });
+  ["footerStoreName", "fBrand"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = storeSettings.name;
+  });
+
+  ["topPhoneDisplay", "topPhone"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = "+" + storeSettings.phone;
+  });
+
+  ["heroBannerImg", "bannerImg"].forEach((id) => {
+    const bannerImg = document.getElementById(id);
+    if (bannerImg && storeSettings.banner) {
+      bannerImg.src = storeSettings.banner;
+    }
+  });
+
+  const phoneInput =
+    document.getElementById("setStorePhone") ||
+    document.getElementById("inWaNumber");
+  const nameInput =
+    document.getElementById("setStoreName") ||
+    document.getElementById("inBrand");
+  if (phoneInput) phoneInput.value = storeSettings.phone;
+  if (nameInput) nameInput.value = storeSettings.name;
 }
 
 function renderCategories() {
@@ -368,6 +388,7 @@ function handleAdminButton() {
     openModal("adminPanelModal");
     renderAdminOrders();
     renderAdminProductList();
+    applySettings();
   } else {
     const passInput = document.getElementById("adminPassInput");
     if (passInput) {
@@ -389,6 +410,7 @@ function verifyAdminLogin() {
     openModal("adminPanelModal");
     renderAdminOrders();
     renderAdminProductList();
+    applySettings();
   } else {
     alert("ভুল পাসওয়ার্ড! সঠিক পাসওয়ার্ড দিন।");
   }
@@ -404,6 +426,34 @@ function switchAdminTab(tabId, tileEl) {
 
   tileEl.classList.add("active");
   document.getElementById(tabId).classList.add("active");
+  if (tabId === "tabSettings") applySettings();
+}
+
+function compressImage(file, maxWidth, quality) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function handleImageFiles(fileInput, callback) {
@@ -412,13 +462,9 @@ function handleImageFiles(fileInput, callback) {
     callback([]);
     return;
   }
-  const promises = files.slice(0, 4).map((file) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.readAsDataURL(file);
-    });
-  });
+  const promises = files
+    .slice(0, 4)
+    .map((file) => compressImage(file, 600, 0.75));
   Promise.all(promises).then((base64Images) => callback(base64Images));
 }
 
@@ -460,7 +506,14 @@ function addNewProduct() {
     };
 
     products.unshift(newProd);
-    localStorage.setItem("trustedShopProducts", JSON.stringify(products));
+    try {
+      localStorage.setItem("trustedShopProducts", JSON.stringify(products));
+    } catch (e) {
+      alert(
+        "স্টোরেজ পূর্ণ! কিছু পুরনো প্রোডাক্ট ডিলিট করুন অথবা ছবির লিংক ব্যবহার করুন।"
+      );
+      return;
+    }
 
     document.getElementById("prodNameInput").value = "";
     document.getElementById("prodDescInput").value = "";
@@ -637,30 +690,51 @@ function addDeliveryZone() {
   alert("নতুন ডেলিভারি অপশন যুক্ত হয়েছে!");
 }
 
-function updateStoreSettings() {
-  const phone = document.getElementById("setStorePhone").value.trim();
-  const name = document.getElementById("setStoreName").value.trim();
-  const bannerInput = document.getElementById("setBannerFile");
+async function updateStoreSettings() {
+  const phoneInput =
+    document.getElementById("setStorePhone") ||
+    document.getElementById("inWaNumber");
+  const nameInput =
+    document.getElementById("setStoreName") ||
+    document.getElementById("inBrand");
+  const bannerInput =
+    document.getElementById("setBannerFile") ||
+    document.getElementById("inBannerFile");
+
+  const phone = phoneInput ? phoneInput.value.trim() : "";
+  const name = nameInput ? nameInput.value.trim() : "";
 
   if (phone) storeSettings.phone = phone;
   if (name) storeSettings.name = name;
 
-  if (bannerInput && bannerInput.files.length > 0) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      storeSettings.banner = e.target.result;
+  try {
+    if (bannerInput && bannerInput.files && bannerInput.files.length > 0) {
+      const compressedBanner = await compressImage(
+        bannerInput.files[0],
+        1000,
+        0.75
+      );
+      storeSettings.banner = compressedBanner;
       localStorage.setItem(
         "trustedShopSettings",
         JSON.stringify(storeSettings)
       );
       applySettings();
-      alert("সেটিংস এবং ব্যানার আপডেট হয়েছে!");
-    };
-    reader.readAsDataURL(bannerInput.files[0]);
-  } else {
-    localStorage.setItem("trustedShopSettings", JSON.stringify(storeSettings));
-    applySettings();
-    alert("সেটিংস আপডেট হয়েছে!");
+      bannerInput.value = "";
+      alert("✅ সেটিংস এবং ব্যানার ছবি সফলভাবে আপডেট হয়েছে!");
+    } else {
+      localStorage.setItem(
+        "trustedShopSettings",
+        JSON.stringify(storeSettings)
+      );
+      applySettings();
+      alert("✅ দোকানের নাম ও নম্বর সফলভাবে আপডেট হয়েছে!");
+    }
+  } catch (error) {
+    alert(
+      "❌ ছবিটি অনেক বড় হওয়ায় সেভ করা যায়নি! দয়া করে আরও ছোট সাইজের একটি ছবি সিলেক্ট করুন।"
+    );
+    console.error(error);
   }
 }
 
@@ -672,4 +746,4 @@ function openModal(id) {
 function closeModal(id) {
   const el = document.getElementById(id);
   if (el) el.style.display = "none";
-                                  }
+}
