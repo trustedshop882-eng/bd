@@ -1,0 +1,25 @@
+{
+  "name": "Trusted Shop, Oxygen, Chattogram",
+  "short_name": "Trusted Shop",
+  "description": "Global Electronics & Fashion Boutique - Oxygen, Chattogram",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
